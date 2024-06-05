@@ -1,0 +1,26 @@
+{
+  "name": "ship name",
+  "root": "123",
+  "parts": [
+    {
+      "id": "123",
+      "type": "cylinder",
+      "location": [ 1, 150, 3 ],
+      "scale": [ 1, 1, 1 ]
+    },
+    {
+      "id": "111",
+      "type": "cylinder",
+      "location": [ 1, -150, 3 ],
+      "scale": [ 1, 1, 1 ],
+      "attached_to": "123",
+      "attached_at": 1
+    },
+    {
+      "id": "001",
+      "type": "cylinder",
+      "location": [ 1, 2, 3 ],
+      "scale": [ 1, 1, 1 ]
+    }
+  ]
+}
