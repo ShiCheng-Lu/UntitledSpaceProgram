@@ -92,6 +92,7 @@ void AConstructionPawn::Tick(float DeltaTime)
 
 void InitializeDefaultPawnInputBindings()
 {
+
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::W, 1.f));
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::S, -1.f));
 
@@ -106,9 +107,8 @@ void InitializeDefaultPawnInputBindings()
 
 	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("ZoomIn", EKeys::MouseWheelAxis));
 
-	// UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("LeftMouseButton", EKeys::LeftMouseButton));
-
-
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("LeftClick", EKeys::LeftMouseButton));
+	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("RightClick", EKeys::RightMouseButton));
 	UE_LOG(LogTemp, Warning, TEXT("Added all axis"));
 }
 
@@ -130,7 +130,9 @@ void AConstructionPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("LookUp", this, &AConstructionPawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AConstructionPawn::LookUpAtRate);
 
-	// PlayerInputComponent->BindAction("LeftMouseButton", IE_Pressed, this, &AConstructionPawn::HandleClick);
+	AMyPlayerController* PlayerController = Cast<AMyPlayerController>(Controller);
+	PlayerInputComponent->BindAction("LeftClick", IE_Pressed, PlayerController, &AMyPlayerController::HandleClick);
+	PlayerInputComponent->BindAction("RightClick", IE_Pressed, PlayerController, &AMyPlayerController::HandleClick);
 
 	UE_LOG(LogTemp, Warning, TEXT("PlayerInput Setup"));
 }
@@ -200,8 +202,16 @@ void AConstructionPawn::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds() * CustomTimeDilation);
 }
 
-void AConstructionPawn::HandleClick(FKey key) {
-	UE_LOG(LogTemp, Warning, TEXT("Clicked"));
+void AConstructionPawn::HandleClick(FKey Key) {
+	
+	if (Key == EKeys::LeftMouseButton) {
+		UE_LOG(LogTemp, Warning, TEXT("AA Left clicked"));
+	}
+	else if (Key == EKeys::RightMouseButton) {
+		UE_LOG(LogTemp, Warning, TEXT("AA Right clicked"));
+	}
+	// AMyPlayerController* PlayerController = Cast<AMyPlayerController>(GetController());
+	// PlayerController->HandleClick(key);
 }
 
 UPawnMovementComponent* AConstructionPawn::GetMovementComponent() const

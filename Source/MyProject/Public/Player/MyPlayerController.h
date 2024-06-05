@@ -19,12 +19,9 @@ class MYPROJECT_API AMyPlayerController : public APlayerController
 public:
 	AMyPlayerController();
 
-	// handle keypress, return true if there is an action that can handle the key (if key was handled)
-	virtual bool InputKey(const FInputKeyParams& Params) override;
+	void HandleClick(FKey Key);
 
 	virtual void PlayerTick(float DeltaTime) override;
-
-	virtual void BeginPlay() override;
 
 	float PlaceDistance;
 protected:
