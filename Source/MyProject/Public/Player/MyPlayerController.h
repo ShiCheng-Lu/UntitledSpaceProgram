@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerInput.h"
 #include "Actors/Part.h"
+#include "Actors/Craft.h"
 #include "MyPlayerController.generated.h"
 
 /**
@@ -21,9 +22,18 @@ public:
 
 	void HandleClick(FKey Key);
 
+	virtual void SetupInputComponent() override;
+
 	virtual void PlayerTick(float DeltaTime) override;
 
 	float PlaceDistance;
 protected:
 	APart* SelectedPart;
+	ACraft* Craft;
+
+	enum Mode {
+		Edit,
+		Rotate,
+		Translate,
+	};
 };

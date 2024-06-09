@@ -7,6 +7,7 @@
 
 #include "Misc/Guid.h"
 #include "JsonUtil.h"
+#include "Actors/AttachmentNode.h"
 #include "Components/StaticMeshComponent.h"
 #include "UI/SConstructionUI.h"
 
@@ -26,8 +27,8 @@ public:
 	APart();
 
 	void Initialize(TSharedPtr<FJsonObject> Json);
-
-	void Attach(TMap<FGuid, TSharedPtr<APart>> PartList);
+	
+	void SetAttachmentNodeVisibility(bool visibility);
 
 protected:
 	// Called when the game starts or when spawned
@@ -38,4 +39,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UStaticMeshComponent* StaticMesh;
+	TArray<UAttachmentNode*> AttachmentNodes;
 };

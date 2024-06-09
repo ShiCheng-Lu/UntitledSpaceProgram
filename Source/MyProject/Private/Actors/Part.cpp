@@ -2,8 +2,10 @@
 
 
 #include "Actors/Part.h"
-#include "Engine/ObjectLibrary.h"
 #include "Engine/StreamableManager.h"
+#include "AssetLibrary.h"
+#include "Engine/StaticMesh.h"
+#include "Actors/AttachmentNode.h"
 
 APart::APart() {
     StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualRepresentation"));
@@ -20,25 +22,18 @@ void APart::Initialize(TSharedPtr<FJsonObject> InJson)
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-
-
     // Load mesh
     FString DefinitionName = FPaths::ProjectDir() + Json->GetStringField(L"type") + FString(".json");
     definition = JsonUtil::ReadFile(DefinitionName);
     FString MeshPath = definition->GetStringField(L"mesh");
 
     FSoftObjectPath MethObjectPath(*MeshPath);
-    UStaticMesh* Mesh = Cast<UStaticMesh>(MethObjectPath.ResolveObject());
-    if (Mesh == nullptr)
-    {
-        Mesh = CastChecked<UStaticMesh>(MethObjectPath.TryLoad());
-    }
-    if (Mesh == nullptr) {
-        UE_LOG(LogTemp, Warning, TEXT("Staic mesh failed"));
-    }
-    else {
+    UStaticMesh* Mesh = AssetLibrary::LoadAsset<UStaticMesh>(*MeshPath);
+    if (Mesh != nullptr) {
         StaticMesh->SetStaticMesh(Mesh);
+
         StaticMesh->SetRelativeLocation(FVector(0.f));
+        StaticMesh->SetRelativeRotation(FQuat());
         StaticMesh->SetRelativeScale3D(FVector(1.f));
     }
 
@@ -46,10 +41,20 @@ void APart::Initialize(TSharedPtr<FJsonObject> InJson)
     GetRootComponent()->SetRelativeLocation(JsonUtil::Vector(Json->GetArrayField(L"location")));
     GetRootComponent()->SetRelativeScale3D(JsonUtil::Vector(Json->GetArrayField(L"scale")));
 
+    for (auto& node : definition->GetArrayField(L"attachment")) {
+        auto location = JsonUtil::Vector(node->AsObject()->GetArrayField(L"location"));
+
+        auto attachment_node = NewObject<UAttachmentNode>(this);
+        attachment_node->Initialize(GetRootComponent(), location);
+
+        AttachmentNodes.Add(attachment_node);
+    }
 }
 
-void APart::Attach(TMap<FGuid, TSharedPtr<APart>> PartList) {
-
+void APart::SetAttachmentNodeVisibility(bool visibility) {
+    for (auto node : AttachmentNodes) {
+        node->SetVisibility(visibility);
+    }
 }
 
 // Called when the game starts or when spawned
@@ -62,9 +67,5 @@ void APart::BeginPlay()
 void APart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-    if (Json.IsValid()) {
-        // GetRootComponent()->SetRelativeScale3D(JsonUtil::Vector(Json->GetArrayField(L"scale")));
-    }
 }
 

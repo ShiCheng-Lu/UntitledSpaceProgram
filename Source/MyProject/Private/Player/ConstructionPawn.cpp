@@ -90,28 +90,6 @@ void AConstructionPawn::Tick(float DeltaTime)
 	*/
 }
 
-void InitializeDefaultPawnInputBindings()
-{
-
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::W, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveForward", EKeys::S, -1.f));
-
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveRight", EKeys::A, -1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveRight", EKeys::D, 1.f));
-
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveUp", EKeys::LeftShift, -1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("MoveUp", EKeys::SpaceBar, 1.f));
-
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("Turn", EKeys::MouseX, 1.f));
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("LookUp", EKeys::MouseY, -1.f));
-
-	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("ZoomIn", EKeys::MouseWheelAxis));
-
-	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("LeftClick", EKeys::LeftMouseButton));
-	UPlayerInput::AddEngineDefinedActionMapping(FInputActionKeyMapping("RightClick", EKeys::RightMouseButton));
-	UE_LOG(LogTemp, Warning, TEXT("Added all axis"));
-}
-
 // Called to bind functionality to input
 void AConstructionPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -119,20 +97,15 @@ void AConstructionPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	check(PlayerInputComponent);
 
-	InitializeDefaultPawnInputBindings();
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &AConstructionPawn::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AConstructionPawn::MoveRight);
-	PlayerInputComponent->BindAxis("MoveUp", this, &AConstructionPawn::MoveUp);
+	PlayerInputComponent->BindAxis("MoveForwardBackward", this, &AConstructionPawn::MoveForward);
+	PlayerInputComponent->BindAxis("MoveLeftRight", this, &AConstructionPawn::MoveRight);
+	PlayerInputComponent->BindAxis("MoveUpDown", this, &AConstructionPawn::MoveUp);
 	PlayerInputComponent->BindAxis("ZoomIn", this, &AConstructionPawn::ZoomIn);
-	PlayerInputComponent->BindAxis("Turn", this, &AConstructionPawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &AConstructionPawn::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &AConstructionPawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AConstructionPawn::LookUpAtRate);
+	PlayerInputComponent->BindAxis("LookX", this, &AConstructionPawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookY", this, &AConstructionPawn::AddControllerPitchInput);
 
-	AMyPlayerController* PlayerController = Cast<AMyPlayerController>(Controller);
-	PlayerInputComponent->BindAction("LeftClick", IE_Pressed, PlayerController, &AMyPlayerController::HandleClick);
-	PlayerInputComponent->BindAction("RightClick", IE_Pressed, PlayerController, &AMyPlayerController::HandleClick);
+	// PlayerInputComponent->BindAxis("TurnRate", this, &AConstructionPawn::TurnAtRate);
+	// PlayerInputComponent->BindAxis("LookUpRate", this, &AConstructionPawn::LookUpAtRate);
 
 	UE_LOG(LogTemp, Warning, TEXT("PlayerInput Setup"));
 }
@@ -178,7 +151,6 @@ void AConstructionPawn::ZoomIn(float Val) {
 	if (Val != 0.f) {
 		if (Controller)
 		{
-			Val *= 100;
 			UE_LOG(LogTemp, Warning, TEXT("Zoom in %f"), Val);
 			FRotator const ControlSpaceRot = Controller->GetControlRotation();
 

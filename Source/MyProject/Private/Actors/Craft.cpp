@@ -32,12 +32,8 @@ void ACraft::Tick(float DeltaTime)
 
 }
 
-/*
-// Called to bind functionality to input
-void ACraft::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+void ACraft::SetAttachmentNodeVisibility(bool visibility) {
+	for (auto& part : Parts) {
+		part.Value->SetAttachmentNodeVisibility(visibility);
+	}
 }
-
-
-*/

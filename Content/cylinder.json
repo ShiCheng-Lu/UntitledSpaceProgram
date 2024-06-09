@@ -1,14 +1,6 @@
 {
   "name": "cylinder",
-  "mesh": "/Game/Shapes/Shape_Cylinder.Shape_Cylinder",
-  "attachment": [
-    {
-      "location": [ 0, 0, 0 ]
-    },
-    {
-      "location": [0, 0, 100]
-    }
-  ],
+  "mesh": "/Game/Shapes/Shape_Sphere.Shape_Sphere",
   "fields": [
     {
       "name": "width",
