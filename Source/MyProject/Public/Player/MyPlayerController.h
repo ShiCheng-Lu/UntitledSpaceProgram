@@ -30,10 +30,13 @@ public:
 protected:
 	APart* SelectedPart;
 	ACraft* Craft;
+	ACraft* Selected;
 
 	enum Mode {
-		Edit,
-		Rotate,
-		Translate,
+		EditMode,
+		RotateMode,
+		TranslateMode,
 	};
+
+	Mode ConstructionMode = Mode::EditMode;
 };

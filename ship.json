@@ -1,27 +1,44 @@
 {
   "name": "ship name",
-  "root": "123",
+  "root": "33672168425CA2CF44EDFBA47BFE3666",
+  "location": [ 0, 0, 0 ],
+  "rotation": [ 0, 0, 0, 1 ],
   "parts": [
     {
-      "id": "123",
+      "id": "33672168425CA2CF44EDFBA47BFE3666",
       "type": "cylinder",
-      "location": [ 1, 150, -50 ],
-      "scale": [ 1, 1, 1 ]
-    },
-    {
-      "id": "111",
-      "type": "cylinder",
-      "location": [ 1, -150, 3 ],
+      "location": [ 0, 0, 0 ],
+      "rotation": [ 0, 0, 0, 1 ],
       "scale": [ 1, 1, 1 ],
-      "attached_to": "123",
+      "attached_to": "",
       "attached_at": 1
     },
     {
-      "id": "001",
+      "id": "ED8BBA7747C86757B618548E7DE9B097",
       "type": "cylinder",
-      "location": [ 1, 2, 3 ],
-      "rotation": [],
-      "scale": [ 1, 1, 1 ]
+      "location": [ 0, 150, -50 ],
+      "rotation": [ 0, 0, 0, 1 ],
+      "scale": [ 1, 1, 1 ],
+      "attached_to": "33672168425CA2CF44EDFBA47BFE3666",
+      "attached_at": 1
+    },
+    {
+      "id": "07A42B774381ECF2B0F89D8C0C59D0F8",
+      "type": "cylinder",
+      "location": [ 0, -150, -50 ],
+      "rotation": [ 0, 0, 0, 1 ],
+      "scale": [ 1, 1, 1 ],
+      "attached_to": "ED8BBA7747C86757B618548E7DE9B097",
+      "attached_at": 1
+    },
+    {
+      "id": "07A42B774381ECF2B0F89D8C0C59D000",
+      "type": "cone",
+      "location": [ 0, -150, 250 ],
+      "rotation": [ 0, 0, 0, 1 ],
+      "scale": [ 1, 1, 1 ],
+      "attached_to": "07A42B774381ECF2B0F89D8C0C59D0F8",
+      "attached_at": 1
     }
   ]
 }

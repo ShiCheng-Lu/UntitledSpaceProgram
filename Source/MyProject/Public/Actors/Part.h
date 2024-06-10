@@ -22,6 +22,7 @@ public:
 	TSharedPtr<FJsonObject> Json;
 	FGuid Id;
 	TSharedPtr<FJsonObject> definition;
+	TArray<APart*> Children;
 
 public:
 	APart();
@@ -34,9 +35,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void SetRelativeLocation(const FVector& NewLocation);
+	FVector GetRelativeLocation();
 
 	UStaticMeshComponent* StaticMesh;
 	TArray<UAttachmentNode*> AttachmentNodes;

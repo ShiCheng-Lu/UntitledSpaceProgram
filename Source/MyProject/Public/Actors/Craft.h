@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 
 #include "Part.h"
+#include "Components/SphereComponent.h"
 
 #include "Craft.generated.h"
 
@@ -16,8 +17,12 @@ class MYPROJECT_API ACraft : public AActor
 
 public:
 	TSharedPtr<FJsonObject> Json;
+	TMap<FGuid, APart*> Parts;
+	USphereComponent* Root;
 
 public:
+	ACraft();
+
 	void Initialize(TSharedPtr<FJsonObject> CraftJson);
 
 protected:
@@ -33,5 +38,15 @@ public:
 	// Called to bind functionality to input
 	// virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	TMap<FGuid, APart*> Parts;
+	// void TransferPart(APart* Part, ACraft* OtherCraft);
+
+	ACraft* DetachPart(APart* Part);
+
+	void AttachPart(ACraft* OtherCraft, APart* AttachToPart);
+
+	void UpdateJsonPartsArray();
+
+	void SetActorLocation(const FVector& NewLocation);
+
+	APart* RootPart();
 };
