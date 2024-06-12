@@ -96,7 +96,7 @@ void AMyPlayerController::HandleClick(FKey Key) {
 
 					Selected = Cast<ACraft>(SelectedPart->GetOwner());
 
-					if (Selected->RootPart() != SelectedPart) {
+					if (Selected->RootPart != SelectedPart) {
 						Selected = Selected->DetachPart(SelectedPart);
 					}
 

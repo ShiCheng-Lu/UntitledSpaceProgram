@@ -17,8 +17,9 @@ class MYPROJECT_API ACraft : public AActor
 
 public:
 	TSharedPtr<FJsonObject> Json;
-	TMap<FGuid, APart*> Parts;
+	TMap<FString, APart*> Parts;
 	USphereComponent* Root;
+	APart* RootPart;
 
 public:
 	ACraft();
@@ -28,6 +29,14 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	TArray<APart*> CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, APart* StructureParent);
+
+	void AddPart(APart* Part);
+
+	void RemovePart(APart* Part);
+
+	static void TransferPart(APart* Part, ACraft* FromCraft, ACraft* ToCraft);
 
 public:	
 	// Called every frame
@@ -47,6 +56,4 @@ public:
 	void UpdateJsonPartsArray();
 
 	void SetActorLocation(const FVector& NewLocation);
-
-	APart* RootPart();
 };

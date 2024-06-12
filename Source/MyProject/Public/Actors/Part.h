@@ -20,9 +20,10 @@ class MYPROJECT_API APart : public AActor
 
 public:
 	TSharedPtr<FJsonObject> Json;
-	FGuid Id;
+	FString Id;
 	TSharedPtr<FJsonObject> definition;
 	TArray<APart*> Children;
+	APart* Parent;
 
 public:
 	APart();
@@ -34,7 +35,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
 
 public:	
 	// Called every frame
