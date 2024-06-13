@@ -18,6 +18,7 @@ TArray<APart*> ACraft::CreatePartStructure(TSharedPtr<FJsonObject> StructureJson
 		APart * Part = GetWorld()->SpawnActor<APart>();
 		Part->Id = PartKVP.Key;
 		Part->Parent = StructureParent;
+		Part->Structure = PartKVP.Value->AsObject();
 		Part->SetOwner(this);
 		PartList.Add(Part);
 		// add to Craft's part list
@@ -35,7 +36,7 @@ void ACraft::Initialize(TSharedPtr<FJsonObject> InJson)
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootPart = CreatePartStructure(Json->GetObjectField("structure"), nullptr)[0];
+	RootPart = CreatePartStructure(Json->GetObjectField(L"structure"), nullptr)[0];
 
 	for (auto& PartKVP : Json->GetObjectField(L"parts")->Values) {
 		auto Part = *Parts.Find(PartKVP.Key);
@@ -101,9 +102,7 @@ ACraft* ACraft::DetachPart(APart* Part) {
 	NewCraft->SetActorLocation(Part->GetActorLocation());
 
 	TransferPart(Part, this, NewCraft);
-
-	Part->Parent->Children.Remove(Part);
-	Part->Parent = nullptr;
+	Part->SetParent(nullptr);
 
 	for (auto& P : NewCraft->Parts) {
 		UE_LOG(LogTemp, Warning, TEXT("New Craft Part: %s"), *P.Value->Id);
@@ -124,8 +123,7 @@ void ACraft::AttachPart(ACraft* SourceCraft, APart *AttachToPart) {
 	TransferPart(SourceCraft->RootPart, SourceCraft, this);
 
 	// SourceCraft->Parent = AttachToPart;
-	AttachToPart->Children.Add(SourceCraft->RootPart);
-	SourceCraft->RootPart->Parent = AttachToPart;
+	SourceCraft->RootPart->SetParent(AttachToPart);
 
 	if (SourceCraft->Parts.IsEmpty()) {
 		SourceCraft->Destroy();

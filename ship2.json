@@ -1,0 +1,56 @@
+{
+	"name": "ship name",
+	"location": [ 0, 0, 0 ],
+	"rotation": [ 0, 0, 0, 1 ],
+	"structure":
+	{
+		"cylinder-1":
+		{
+			"cylinder-2":
+			{
+				"cylinder-3":
+				{
+				}
+			},
+			"cone-1":
+			{
+			}
+		}
+	},
+	"parts":
+	{
+		"cylinder-1":
+		{
+			"type": "cylinder",
+			"location": [ 0, 0, 0 ],
+			"rotation": [ 0, 0, 0, 1 ],
+			"scale": [ 1, 1, 1 ],
+			"attached_at": 1,
+			"attached_with": 1
+		},
+		"cylinder-2":
+		{
+			"type": "cylinder",
+			"location": [ 0, 0, -100 ],
+			"rotation": [ 0, 0, 0, 1 ],
+			"scale": [ 1, 1, 1 ],
+			"attached_at": 1
+		},
+		"cylinder-3":
+		{
+			"type": "cylinder",
+			"location": [ 0, 0, -200 ],
+			"rotation": [ 0, 0, 0, 1 ],
+			"scale": [ 1, 1, 1 ],
+			"attached_at": 1
+		},
+		"cone-1":
+		{
+			"type": "cone",
+			"location": [ 0, 0, 100 ],
+			"rotation": [ 0, 0, 0, 1 ],
+			"scale": [ 1, 1, 1 ],
+			"attached_at": 1
+		}
+	}
+}

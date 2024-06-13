@@ -20,6 +20,7 @@ class MYPROJECT_API APart : public AActor
 
 public:
 	TSharedPtr<FJsonObject> Json;
+	TSharedPtr<FJsonObject> Structure;
 	FString Id;
 	TSharedPtr<FJsonObject> definition;
 	TArray<APart*> Children;
@@ -31,6 +32,8 @@ public:
 	void Initialize(TSharedPtr<FJsonObject> Json);
 	
 	void SetAttachmentNodeVisibility(bool visibility);
+
+	void SetParent(APart* Part);
 
 protected:
 	// Called when the game starts or when spawned

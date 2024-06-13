@@ -20,11 +20,4 @@ void AConstructionHUD::BeginPlay() {
 
 	UGameViewportClient* ViewportClient = GetWorld()->GetGameViewport();
 	ViewportClient->AddViewportWidgetContent(MyWidget.ToSharedRef());
-
-	UE_LOG(LogTemp, Warning, TEXT("Guid: %s"), *FGuid::NewGuid().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Guid: %s"), *FGuid::NewGuid().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Guid: %s"), *FGuid::NewGuid().ToString());
-
-	ACraft* Craft = GetWorld()->SpawnActor<ACraft>();
-	Craft->Initialize(JsonUtil::ReadFile(FPaths::ProjectDir() + "ship.json"));
 }

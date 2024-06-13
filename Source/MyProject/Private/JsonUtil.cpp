@@ -18,7 +18,7 @@ TSharedPtr<FJsonObject> JsonUtil::ReadFile(FString FilePath) {
 bool JsonUtil::WriteFile(FString FilePath, TSharedPtr<FJsonObject> JsonObject) {
 	FString JsonString;
 
-	if (!FJsonSerializer::Serialize(JsonObject.ToSharedRef(), TJsonWriterFactory<>::Create(&JsonString, 2))) {
+	if (!FJsonSerializer::Serialize(JsonObject.ToSharedRef(), TJsonWriterFactory<>::Create(&JsonString))) {
 		return false;
 	}
 

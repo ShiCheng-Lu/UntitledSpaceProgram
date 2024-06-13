@@ -26,6 +26,13 @@ public:
 
 	virtual void PlayerTick(float DeltaTime) override;
 
+	void Save();
+
+	void Load();
+
+	// return the part that the held part is placed against, if it exists
+	APart* PlaceHeldPart();
+
 	float PlaceDistance;
 protected:
 	APart* SelectedPart;

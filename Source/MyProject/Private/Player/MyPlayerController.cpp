@@ -39,50 +39,69 @@ void AMyPlayerController::SetupInputComponent() {
 	InputComponent->BindAction("LeftClick", IE_Pressed, this, &AMyPlayerController::HandleClick);
 	InputComponent->BindAction("RightClick", IE_Pressed, this, &AMyPlayerController::HandleClick);
 	InputComponent->BindAction("MiddleClick", IE_Pressed, this, &AMyPlayerController::HandleClick);
+
+	PlayerInput->AddActionMapping(FInputActionKeyMapping("Save", EKeys::M));
+	InputComponent->BindAction("Save", IE_Pressed, this, &AMyPlayerController::Save);
+	PlayerInput->AddActionMapping(FInputActionKeyMapping("Load", EKeys::N));
+	InputComponent->BindAction("Load", IE_Pressed, this, &AMyPlayerController::Load);
+}
+
+APart * AMyPlayerController::PlaceHeldPart() {
+	if (Craft == nullptr || SelectedPart == nullptr || Selected == nullptr) {
+		return nullptr;
+	}
+
+	FVector location;
+	FVector direction;
+	if (DeprojectMousePositionToWorld(location, direction)) {
+		FVector part_location = location + direction * PlaceDistance;
+		AActor* AttachTo = nullptr;
+
+		for (auto& node : SelectedPart->AttachmentNodes) {
+			TArray<FHitResult> hit_results;
+			FVector start = location;
+			FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
+			FCollisionQueryParams query_params;
+
+			for (auto& part : Selected->Parts) {
+				query_params.AddIgnoredActor(part.Value);
+			}
+
+			GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects, query_params);
+
+			for (auto& hit_result : hit_results) {
+				UAttachmentNode* component = Cast<UAttachmentNode>(hit_result.GetComponent());
+				if (component == nullptr) {
+					continue;
+				}
+				// don't check for closest attachment node for now
+				AttachTo = component->GetOwner();
+				part_location = AttachTo->GetActorLocation() + component->RelativeLocation - node->RelativeLocation;
+				break;
+			}
+		}
+
+		Selected->SetActorLocation(part_location);
+
+		if (AttachTo != nullptr) {
+			return Cast<APart>(AttachTo);
+		}
+	}
+	return nullptr;
 }
 
 void AMyPlayerController::HandleClick(FKey Key) {
 	if (ConstructionMode == AMyPlayerController::EditMode) {
 		if (Key == EKeys::LeftMouseButton) {
-			if (SelectedPart != NULL) {
-				// place the part
-				FVector location;
-				FVector direction;
-				if (DeprojectMousePositionToWorld(location, direction)) {
-					FVector part_location = location + direction * PlaceDistance;
-					AActor* AttachTo = nullptr;
-
-					for (auto& node : SelectedPart->AttachmentNodes) {
-						TArray<FHitResult> hit_results;
-						FVector start = location;
-						FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
-						FCollisionQueryParams query_params;
-
-						for (auto& part : Selected->Parts) {
-							query_params.AddIgnoredActor(part.Value);
-						}
-
-						GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects, query_params);
-
-						for (auto& hit_result : hit_results) {
-							UAttachmentNode* component = Cast<UAttachmentNode>(hit_result.GetComponent());
-							if (component == nullptr) {
-								continue;
-							}
-							// don't check for closest attachment node for now
-							AttachTo = component->GetOwner();
-							part_location = AttachTo->GetActorLocation() + component->RelativeLocation - node->RelativeLocation;
-						}
-					}
-					
-					if (AttachTo) {
-						APart* AttachToPart = Cast<APart>(AttachTo);
-						Cast<ACraft>(AttachToPart->GetOwner())->AttachPart(Selected, AttachToPart);
-					}
+			if (SelectedPart != nullptr) {
+				APart* AttachToPart = PlaceHeldPart();
+				if (AttachToPart != nullptr) {
+					UE_LOG(LogTemp, Warning, TEXT("Attach"));
+					Cast<ACraft>(AttachToPart->GetOwner())->AttachPart(Selected, AttachToPart);
 				}
 				
-				Selected = NULL;
-				SelectedPart = NULL;
+				Selected = nullptr;
+				SelectedPart = nullptr;
 				// Craft->SetAttachmentNodeVisibility(true);
 			}
 			else {
@@ -126,13 +145,22 @@ void AMyPlayerController::HandleClick(FKey Key) {
 	}
 }
 
+void AMyPlayerController::Save() {
+	JsonUtil::WriteFile(FPaths::ProjectDir() + "ship2.json", Craft->Json);
+}
+
+void AMyPlayerController::Load() {
+	Craft = GetWorld()->SpawnActor<ACraft>();
+	Craft->Initialize(JsonUtil::ReadFile(FPaths::ProjectDir() + "ship.json"));
+}
+
 void AMyPlayerController::PlayerTick(float DeltaTime) {
 	Super::PlayerTick(DeltaTime);
 
 	switch (ConstructionMode)
 	{
 	case AMyPlayerController::EditMode:
-		
+		PlaceHeldPart();
 		break;
 	case AMyPlayerController::RotateMode:
 		break;
@@ -140,37 +168,5 @@ void AMyPlayerController::PlayerTick(float DeltaTime) {
 		break;
 	default:
 		break;
-	}
-
-	if (ConstructionMode == AMyPlayerController::EditMode && SelectedPart != NULL && Selected != NULL) {
-		FVector location;
-		FVector direction;
-		if (DeprojectMousePositionToWorld(location, direction)) {
-			FVector part_location = location + direction * PlaceDistance;
-
-			for (auto& node : SelectedPart->AttachmentNodes) {
-				TArray<FHitResult> hit_results;
-				FVector start = location;
-				FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
-				FCollisionQueryParams query_params;
-				
-				for (auto& part : Selected->Parts) {
-					query_params.AddIgnoredActor(part.Value);
-				}
-
-				GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects, query_params);
-
-				for (auto& hit_result : hit_results) {
-					UAttachmentNode*component = Cast<UAttachmentNode>(hit_result.GetComponent());
-					if (component == nullptr) {
-						continue;
-					}
-					// don't check for closest attachment node for now
-					part_location = component->GetOwner()->GetActorLocation() + component->RelativeLocation - node->RelativeLocation;
-				}
-			}
-
-			Selected->SetActorLocation(part_location);
-		}
 	}
 }

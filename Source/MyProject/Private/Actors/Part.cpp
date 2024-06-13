@@ -77,3 +77,14 @@ FVector APart::GetRelativeLocation() {
 	return JsonUtil::Vector(Json->GetArrayField("location"));
 }
 
+void APart::SetParent(APart* NewParent) {
+	if (Parent) {
+		Parent->Children.Remove(this);
+		Parent->Structure->RemoveField(Id);
+	}
+	if (NewParent) {
+		Parent = NewParent;
+		Parent->Children.Add(this);
+		Parent->Structure->SetObjectField(Id, Structure);
+	}
+}
