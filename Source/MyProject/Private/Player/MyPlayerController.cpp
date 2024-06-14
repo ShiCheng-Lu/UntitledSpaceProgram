@@ -44,6 +44,10 @@ void AMyPlayerController::SetupInputComponent() {
 	InputComponent->BindAction("Save", IE_Pressed, this, &AMyPlayerController::Save);
 	PlayerInput->AddActionMapping(FInputActionKeyMapping("Load", EKeys::N));
 	InputComponent->BindAction("Load", IE_Pressed, this, &AMyPlayerController::Load);
+
+	PlayerInput->AddAxisMapping(FInputAxisKeyMapping("Throttle", EKeys::I, 0.1f));
+	PlayerInput->AddAxisMapping(FInputAxisKeyMapping("Throttle", EKeys::K, -0.1f));
+	InputComponent->BindAxis("Throttle", this, &AMyPlayerController::Throttle);
 }
 
 APart * AMyPlayerController::PlaceHeldPart() {
@@ -168,5 +172,12 @@ void AMyPlayerController::PlayerTick(float DeltaTime) {
 		break;
 	default:
 		break;
+	}
+}
+
+
+void AMyPlayerController::Throttle(float Val) {
+	if (Val != 0 && Craft != nullptr) {
+		Craft->Throttle(Val);
 	}
 }

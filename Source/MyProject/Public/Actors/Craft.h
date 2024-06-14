@@ -20,6 +20,7 @@ public:
 	TMap<FString, APart*> Parts;
 	USphereComponent* Root;
 	APart* RootPart;
+	APart* Engine;
 
 public:
 	ACraft();
@@ -56,4 +57,6 @@ public:
 	void UpdateJsonPartsArray();
 
 	void SetActorLocation(const FVector& NewLocation);
+
+	void Throttle(float throttle);
 };

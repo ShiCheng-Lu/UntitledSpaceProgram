@@ -8,7 +8,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class MYPROJECT_API UAttachmentNode : public USphereComponent
+class MYPROJECT_API UAttachmentNode : public UStaticMeshComponent
 {
 	GENERATED_BODY()
 
@@ -18,14 +18,5 @@ public:
 
 	void Initialize(USceneComponent *InParent, FVector& InRelativeLocation);
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UStaticMeshComponent* Mesh;
 	FVector RelativeLocation;
 };

@@ -33,6 +33,8 @@ public:
 	// return the part that the held part is placed against, if it exists
 	APart* PlaceHeldPart();
 
+	void Throttle(float Val);
+
 	float PlaceDistance;
 protected:
 	APart* SelectedPart;

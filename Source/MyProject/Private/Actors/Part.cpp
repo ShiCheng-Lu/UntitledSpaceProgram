@@ -8,9 +8,21 @@
 #include "Actors/AttachmentNode.h"
 
 APart::APart() {
+
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualRepresentation"));
 	// StaticMesh->SetupAttachment(GetRootComponent());
+	StaticMesh->SetSimulatePhysics(true);
+	
 	SetRootComponent(StaticMesh);
+
+	if (StaticMesh->CanEditSimulatePhysics()) {
+
+		UE_LOG(LogTemp, Warning, TEXT("can simulate"));
+	}
+	else {
+
+		UE_LOG(LogTemp, Warning, TEXT("no simulate"));
+	}
 }
 
 // Sets default values
@@ -39,7 +51,7 @@ void APart::Initialize(TSharedPtr<FJsonObject> InJson)
 	// set locaiton and scale
 	GetRootComponent()->SetRelativeLocation(GetRelativeLocation());
 	GetRootComponent()->SetRelativeScale3D(JsonUtil::Vector(Json->GetArrayField(L"scale")));
-
+	
 	for (auto& node : definition->GetArrayField(L"attachment")) {
 		auto location = JsonUtil::Vector(node->AsObject()->GetArrayField(L"location"));
 

@@ -5,6 +5,7 @@
 
 ACraft::ACraft() {
 	Root = CreateDefaultSubobject<USphereComponent>(TEXT("VisualRepresentation"));
+	Root->SetSimulatePhysics(false);
 	// StaticMesh->SetupAttachment(GetRootComponent());
 	SetRootComponent(Root);
 
@@ -43,6 +44,10 @@ void ACraft::Initialize(TSharedPtr<FJsonObject> InJson)
 		Part->Initialize(PartKVP.Value->AsObject());
 
 		UE_LOG(LogTemp, Warning, TEXT("created part"));
+
+		if (Part->Json->GetStringField(L"type") == "engine") {
+			Engine = Part;
+		}
 	}
 }
 
@@ -134,5 +139,11 @@ void ACraft::SetActorLocation(const FVector& NewLocation) {
 	Super::SetActorLocation(NewLocation);
 	for (auto& part : Parts) {
 		part.Value->SetActorLocation(part.Value->GetRelativeLocation() + NewLocation);
+	}
+}
+
+void ACraft::Throttle(float throttle) {
+	if (Engine) {
+		Engine->StaticMesh->AddForce(FVector(0, 0, throttle));
 	}
 }
