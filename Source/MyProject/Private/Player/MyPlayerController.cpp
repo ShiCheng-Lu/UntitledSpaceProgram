@@ -50,70 +50,69 @@ void AMyPlayerController::SetupInputComponent() {
 	InputComponent->BindAxis("Throttle", this, &AMyPlayerController::Throttle);
 }
 
-APart * AMyPlayerController::PlaceHeldPart() {
+UPart* AMyPlayerController::PlaceHeldPart() {
 	if (Craft == nullptr || SelectedPart == nullptr || Selected == nullptr) {
 		return nullptr;
 	}
 
 	FVector location;
 	FVector direction;
-	if (DeprojectMousePositionToWorld(location, direction)) {
-		FVector part_location = location + direction * PlaceDistance;
-		AActor* AttachTo = nullptr;
+	if (!DeprojectMousePositionToWorld(location, direction)) {
+		return nullptr;
+	}
 
-		for (auto& node : SelectedPart->AttachmentNodes) {
-			TArray<FHitResult> hit_results;
-			FVector start = location;
-			FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
-			FCollisionQueryParams query_params;
+	FVector part_location = location + direction * PlaceDistance;
+	UPart* AttachTo = nullptr;
 
-			for (auto& part : Selected->Parts) {
-				query_params.AddIgnoredActor(part.Value);
+	for (auto& node : SelectedPart->AttachmentNodes) {
+		TArray<FHitResult> hit_results;
+		FVector start = location;
+		FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
+
+		GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects);
+
+		for (auto& hit_result : hit_results) {
+			UAttachmentNode* component = Cast<UAttachmentNode>(hit_result.GetComponent());
+			if (component == nullptr) {
+				continue;
 			}
-
-			GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects, query_params);
-
-			for (auto& hit_result : hit_results) {
-				UAttachmentNode* component = Cast<UAttachmentNode>(hit_result.GetComponent());
-				if (component == nullptr) {
-					continue;
-				}
-				// don't check for closest attachment node for now
-				AttachTo = component->GetOwner();
-				part_location = AttachTo->GetActorLocation() + component->RelativeLocation - node->RelativeLocation;
+			// don't check for the closer attachment node for now
+			AttachTo = Cast<UPart>(component->GetOuter());
+			// Actor filter don't work for some reason, maybe to do with changing component ownership with .Rename()
+			if (AttachTo && component->GetOwner() != Selected) {
+				part_location = AttachTo->GetComponentLocation() + component->GetRelativeLocation() - node->GetRelativeLocation();
 				break;
 			}
-		}
-
-		Selected->SetActorLocation(part_location);
-
-		if (AttachTo != nullptr) {
-			return Cast<APart>(AttachTo);
+			else {
+				AttachTo = nullptr;
+			}
 		}
 	}
-	return nullptr;
+
+	Selected->SetActorLocation(part_location);
+
+	return AttachTo;
 }
 
 void AMyPlayerController::HandleClick(FKey Key) {
 	if (ConstructionMode == AMyPlayerController::EditMode) {
 		if (Key == EKeys::LeftMouseButton) {
-			if (SelectedPart != nullptr) {
-				APart* AttachToPart = PlaceHeldPart();
+			if (Selected != nullptr) {
+				UPart* AttachToPart = PlaceHeldPart();
 				if (AttachToPart != nullptr) {
 					UE_LOG(LogTemp, Warning, TEXT("Attach"));
 					Cast<ACraft>(AttachToPart->GetOwner())->AttachPart(Selected, AttachToPart);
 				}
 				
 				Selected = nullptr;
-				SelectedPart = nullptr;
 				// Craft->SetAttachmentNodeVisibility(true);
 			}
 			else {
 				FHitResult result;
 				if (GetHitResultUnderCursor(ECC_Visibility, true, result)) {
-					SelectedPart = Cast<APart>(result.GetActor());
+					SelectedPart = Cast<UPart>(result.GetComponent());
 
-					FVector ActorLocation = SelectedPart->GetActorLocation();
+					FVector ActorLocation = SelectedPart->GetRelativeLocation();
 					FVector PawnLocation = GetPawn()->GetActorLocation();
 					PlaceDistance = FVector::Distance(ActorLocation, PawnLocation);
 
@@ -123,7 +122,7 @@ void AMyPlayerController::HandleClick(FKey Key) {
 						Selected = Selected->DetachPart(SelectedPart);
 					}
 
-					UE_LOG(LogTemp, Warning, TEXT("Hit part"));
+					UE_LOG(LogTemp, Warning, TEXT("Selected part %s - %s"), *SelectedPart->Id, *Selected->GetActorGuid().ToString());
 
 					// Craft->SetAttachmentNodeVisibility(false);
 				}
@@ -150,6 +149,9 @@ void AMyPlayerController::HandleClick(FKey Key) {
 }
 
 void AMyPlayerController::Save() {
+	if (!Craft) {
+		return;
+	}
 	JsonUtil::WriteFile(FPaths::ProjectDir() + "ship2.json", Craft->Json);
 }
 

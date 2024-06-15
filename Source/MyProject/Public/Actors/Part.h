@@ -13,39 +13,28 @@
 
 #include "Part.generated.h"
 
-UCLASS()
-class MYPROJECT_API APart : public AActor
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+class MYPROJECT_API UPart : public UStaticMeshComponent
 {
 	GENERATED_BODY()
 
 public:
 	TSharedPtr<FJsonObject> Json;
 	TSharedPtr<FJsonObject> Structure;
-	FString Id;
+
 	TSharedPtr<FJsonObject> definition;
-	TArray<APart*> Children;
-	APart* Parent;
 
-public:
-	APart();
+	FString Id;
+	TArray<UPart*> Children;
+	UPart* Parent;
 
-	void Initialize(TSharedPtr<FJsonObject> Json);
+	TArray<UAttachmentNode*> AttachmentNodes;
+
+	UPart();
+
+	void Initialize(USceneComponent* InParent, TSharedPtr<FJsonObject> Json);
 	
 	void SetAttachmentNodeVisibility(bool visibility);
 
-	void SetParent(APart* Part);
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	void SetRelativeLocation(const FVector& NewLocation);
-	FVector GetRelativeLocation();
-
-	UStaticMeshComponent* StaticMesh;
-	TArray<UAttachmentNode*> AttachmentNodes;
+	void SetParent(UPart* Part);
 };

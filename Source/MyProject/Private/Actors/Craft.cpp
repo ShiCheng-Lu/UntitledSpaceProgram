@@ -5,27 +5,26 @@
 
 ACraft::ACraft() {
 	Root = CreateDefaultSubobject<USphereComponent>(TEXT("VisualRepresentation"));
-	Root->SetSimulatePhysics(false);
-	// StaticMesh->SetupAttachment(GetRootComponent());
+	// Root->SetSimulatePhysics(false);
 	SetRootComponent(Root);
-
-	// Initialize(JsonUtil::ReadFile(FPaths::ProjectDir() + "default_ship.json"));
-	// Json->SetObjectField(L"parts", MakeShareable(new FJsonObject()));
 }
 
-TArray<APart*> ACraft::CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, APart* StructureParent) {
-	TArray<APart*> PartList;
+TArray<UPart*> ACraft::CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, UPart* StructureParent) {
+	TArray<UPart*> PartList;
 	for (auto& PartKVP : StructureJson->Values) {
-		APart * Part = GetWorld()->SpawnActor<APart>();
+		auto Part = NewObject<UPart>(Root);
+		
 		Part->Id = PartKVP.Key;
 		Part->Parent = StructureParent;
 		Part->Structure = PartKVP.Value->AsObject();
-		Part->SetOwner(this);
+
 		PartList.Add(Part);
 		// add to Craft's part list
 		Parts.Add(PartKVP.Key, Part);
 
 		Part->Children = CreatePartStructure(PartKVP.Value->AsObject(), Part);
+		UE_LOG(LogTemp, Warning, TEXT("created: %s"), *PartKVP.Key);
+
 	}
 	return PartList;
 }
@@ -37,14 +36,25 @@ void ACraft::Initialize(TSharedPtr<FJsonObject> InJson)
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	if (Root) {
+
+	}
+	else {
+		UE_LOG(LogTemp, Warning, TEXT("root doesnt eixst???"));
+
+	}
+
 	RootPart = CreatePartStructure(Json->GetObjectField(L"structure"), nullptr)[0];
-
+	
 	for (auto& PartKVP : Json->GetObjectField(L"parts")->Values) {
+		if (!Parts.Contains(PartKVP.Key)) {
+			UE_LOG(LogTemp, Warning, TEXT("part key not found: %s"), *PartKVP.Key);
+			continue;
+		}
+		
 		auto Part = *Parts.Find(PartKVP.Key);
-		Part->Initialize(PartKVP.Value->AsObject());
-
-		UE_LOG(LogTemp, Warning, TEXT("created part"));
-
+		Part->Initialize(GetRootComponent(), PartKVP.Value->AsObject());
+		
 		if (Part->Json->GetStringField(L"type") == "engine") {
 			Engine = Part;
 		}
@@ -69,19 +79,23 @@ void ACraft::SetAttachmentNodeVisibility(bool visibility) {
 	}
 }
 
-void ACraft::AddPart(APart* Part) {
+void ACraft::AddPart(UPart* Part) {
+	Part->Rename(*Part->GetName(), Root);
+	Part->AttachToComponent(Root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+
 	Parts.Add(Part->Id, Part);
 	Json->GetObjectField(L"parts")->SetObjectField(Part->Id, Part->Json);
-	Part->SetOwner(this);
 }
 
-void ACraft::RemovePart(APart* Part) {
+void ACraft::RemovePart(UPart* Part) {
+	Part->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+
 	Parts.Remove(Part->Id);
 	Json->GetObjectField(L"parts")->RemoveField(Part->Id);
 }
 
 // transfer all parts attached to another craft
-void ACraft::TransferPart(APart* Part, ACraft* FromCraft, ACraft* ToCraft) {
+void ACraft::TransferPart(UPart* Part, ACraft* FromCraft, ACraft* ToCraft) {
 	UE_LOG(LogTemp, Warning, TEXT("Transfer %s"), *Part->Id);
 	if (!FromCraft->Parts.Contains(Part->Id)) {
 		// Part has already been moved???
@@ -91,27 +105,27 @@ void ACraft::TransferPart(APart* Part, ACraft* FromCraft, ACraft* ToCraft) {
 	FromCraft->RemovePart(Part);
 	ToCraft->AddPart(Part);
 
-	Part->SetRelativeLocation(Part->GetActorLocation() - ToCraft->GetActorLocation());
-
 	for (auto& Child : Part->Children) {
 		TransferPart(Child, FromCraft, ToCraft);
 	}
 }
 
-ACraft* ACraft::DetachPart(APart* Part) {
+ACraft* ACraft::DetachPart(UPart* Part) {
 	ACraft* NewCraft = GetWorld()->SpawnActor<ACraft>();
 	NewCraft->RootPart = Part;
 	NewCraft->Json = MakeShareable(new FJsonObject());
 	NewCraft->Json->SetStringField(L"name", "sub craft");
 	NewCraft->Json->SetObjectField(L"parts", MakeShareable(new FJsonObject()));
-	NewCraft->SetActorLocation(Part->GetActorLocation());
+	NewCraft->SetActorLocation(Part->GetComponentLocation());
 
 	TransferPart(Part, this, NewCraft);
 	Part->SetParent(nullptr);
 
 	for (auto& P : NewCraft->Parts) {
-		UE_LOG(LogTemp, Warning, TEXT("New Craft Part: %s"), *P.Value->Id);
+		UE_LOG(LogTemp, Warning, TEXT("New Craft Part: %s @ %s - %s"), *P.Value->Id, *P.Value->GetRelativeLocation().ToString(), *P.Value->GetOwner()->GetActorGuid().ToString());
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Old Craft Component Count: %d - %s"), GetComponents().Num(), *GetActorGuid().ToString());
+	UE_LOG(LogTemp, Warning, TEXT("New Craft Component Count: %d - %s"), NewCraft->GetComponents().Num(), *NewCraft->GetActorGuid().ToString());
 
 	return NewCraft;
 }
@@ -124,7 +138,7 @@ void ACraft::UpdateJsonPartsArray() {
 	Json->SetArrayField(L"parts", parts);
 }
 
-void ACraft::AttachPart(ACraft* SourceCraft, APart *AttachToPart) {
+void ACraft::AttachPart(ACraft* SourceCraft, UPart* AttachToPart) {
 	TransferPart(SourceCraft->RootPart, SourceCraft, this);
 
 	// SourceCraft->Parent = AttachToPart;
@@ -133,17 +147,16 @@ void ACraft::AttachPart(ACraft* SourceCraft, APart *AttachToPart) {
 	if (SourceCraft->Parts.IsEmpty()) {
 		SourceCraft->Destroy();
 	}
-}
+	else {
 
-void ACraft::SetActorLocation(const FVector& NewLocation) {
-	Super::SetActorLocation(NewLocation);
-	for (auto& part : Parts) {
-		part.Value->SetActorLocation(part.Value->GetRelativeLocation() + NewLocation);
+		UE_LOG(LogTemp, Warning, TEXT("Source craft shouldn't be empty!"));
 	}
 }
 
 void ACraft::Throttle(float throttle) {
+	/*
 	if (Engine) {
-		Engine->StaticMesh->AddForce(FVector(0, 0, throttle));
+		Engine->AddForce(FVector(0, 0, throttle));
 	}
+	*/
 }

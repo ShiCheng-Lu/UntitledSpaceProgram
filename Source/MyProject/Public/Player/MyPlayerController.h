@@ -31,13 +31,14 @@ public:
 	void Load();
 
 	// return the part that the held part is placed against, if it exists
-	APart* PlaceHeldPart();
+	UPart* PlaceHeldPart();
 
 	void Throttle(float Val);
 
 	float PlaceDistance;
+
 protected:
-	APart* SelectedPart;
+	UPart* SelectedPart;
 	ACraft* Craft;
 	ACraft* Selected;
 

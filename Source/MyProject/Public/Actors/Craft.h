@@ -17,10 +17,10 @@ class MYPROJECT_API ACraft : public AActor
 
 public:
 	TSharedPtr<FJsonObject> Json;
-	TMap<FString, APart*> Parts;
-	USphereComponent* Root;
-	APart* RootPart;
-	APart* Engine;
+	TMap<FString, UPart*> Parts;
+	USceneComponent* Root;
+	UPart* RootPart;
+	UPart* Engine;
 
 public:
 	ACraft();
@@ -31,13 +31,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	TArray<APart*> CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, APart* StructureParent);
+	TArray<UPart*> CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, UPart* StructureParent);
 
-	void AddPart(APart* Part);
+	void AddPart(UPart* Part);
 
-	void RemovePart(APart* Part);
+	void RemovePart(UPart* Part);
 
-	static void TransferPart(APart* Part, ACraft* FromCraft, ACraft* ToCraft);
+	static void TransferPart(UPart* Part, ACraft* FromCraft, ACraft* ToCraft);
 
 public:	
 	// Called every frame
@@ -50,13 +50,11 @@ public:
 
 	// void TransferPart(APart* Part, ACraft* OtherCraft);
 
-	ACraft* DetachPart(APart* Part);
+	ACraft* DetachPart(UPart* Part);
 
-	void AttachPart(ACraft* OtherCraft, APart* AttachToPart);
+	void AttachPart(ACraft* OtherCraft, UPart* AttachToPart);
 
 	void UpdateJsonPartsArray();
-
-	void SetActorLocation(const FVector& NewLocation);
 
 	void Throttle(float throttle);
 };
