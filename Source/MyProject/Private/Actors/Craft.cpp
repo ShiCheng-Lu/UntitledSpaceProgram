@@ -1,30 +1,26 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "Containers/Queue.h"
 #include "Actors/Craft.h"
 
 ACraft::ACraft() {
-	Root = CreateDefaultSubobject<USphereComponent>(TEXT("VisualRepresentation"));
-	// Root->SetSimulatePhysics(false);
-	SetRootComponent(Root);
 }
 
 TArray<UPart*> ACraft::CreatePartStructure(TSharedPtr<FJsonObject> StructureJson, UPart* StructureParent) {
 	TArray<UPart*> PartList;
 	for (auto& PartKVP : StructureJson->Values) {
-		auto Part = NewObject<UPart>(Root);
-		
-		Part->Id = PartKVP.Key;
-		Part->Parent = StructureParent;
-		Part->Structure = PartKVP.Value->AsObject();
+		auto Part = NewObject<UPart>(this);
+
+		auto& PartListJson = Json->GetObjectField(L"parts");
+		auto& PartJson = PartListJson->GetObjectField(PartKVP.Key);
+		Part->Initialize(PartKVP.Key, PartKVP.Value->AsObject(), PartJson);
+		Part->SetParent(StructureParent);
 
 		PartList.Add(Part);
-		// add to Craft's part list
 		Parts.Add(PartKVP.Key, Part);
 
-		Part->Children = CreatePartStructure(PartKVP.Value->AsObject(), Part);
+		CreatePartStructure(PartKVP.Value->AsObject(), Part);
 		UE_LOG(LogTemp, Warning, TEXT("created: %s"), *PartKVP.Key);
-
 	}
 	return PartList;
 }
@@ -36,29 +32,8 @@ void ACraft::Initialize(TSharedPtr<FJsonObject> InJson)
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	if (Root) {
-
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("root doesnt eixst???"));
-
-	}
-
 	RootPart = CreatePartStructure(Json->GetObjectField(L"structure"), nullptr)[0];
-	
-	for (auto& PartKVP : Json->GetObjectField(L"parts")->Values) {
-		if (!Parts.Contains(PartKVP.Key)) {
-			UE_LOG(LogTemp, Warning, TEXT("part key not found: %s"), *PartKVP.Key);
-			continue;
-		}
-		
-		auto Part = *Parts.Find(PartKVP.Key);
-		Part->Initialize(GetRootComponent(), PartKVP.Value->AsObject());
-		
-		if (Part->Json->GetStringField(L"type") == "engine") {
-			Engine = Part;
-		}
-	}
+	SetRootComponent(RootPart);
 }
 
 // Called when the game starts or when spawned
@@ -80,21 +55,18 @@ void ACraft::SetAttachmentNodeVisibility(bool visibility) {
 }
 
 void ACraft::AddPart(UPart* Part) {
-	Part->Rename(*Part->GetName(), Root);
-	Part->AttachToComponent(Root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
-
 	Parts.Add(Part->Id, Part);
 	Json->GetObjectField(L"parts")->SetObjectField(Part->Id, Part->Json);
+	// change ownership
+	Part->Rename(*Part->GetName(), this);
 }
 
 void ACraft::RemovePart(UPart* Part) {
-	Part->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
-
 	Parts.Remove(Part->Id);
 	Json->GetObjectField(L"parts")->RemoveField(Part->Id);
 }
 
-// transfer all parts attached to another craft
+// transfer ownership of part and any children to another craft
 void ACraft::TransferPart(UPart* Part, ACraft* FromCraft, ACraft* ToCraft) {
 	UE_LOG(LogTemp, Warning, TEXT("Transfer %s"), *Part->Id);
 	if (!FromCraft->Parts.Contains(Part->Id)) {
@@ -119,7 +91,9 @@ ACraft* ACraft::DetachPart(UPart* Part) {
 	NewCraft->SetActorLocation(Part->GetComponentLocation());
 
 	TransferPart(Part, this, NewCraft);
+	
 	Part->SetParent(nullptr);
+	NewCraft->SetRootComponent(Part);
 
 	for (auto& P : NewCraft->Parts) {
 		UE_LOG(LogTemp, Warning, TEXT("New Craft Part: %s @ %s - %s"), *P.Value->Id, *P.Value->GetRelativeLocation().ToString(), *P.Value->GetOwner()->GetActorGuid().ToString());
@@ -141,7 +115,7 @@ void ACraft::UpdateJsonPartsArray() {
 void ACraft::AttachPart(ACraft* SourceCraft, UPart* AttachToPart) {
 	TransferPart(SourceCraft->RootPart, SourceCraft, this);
 
-	// SourceCraft->Parent = AttachToPart;
+	SourceCraft->SetRootComponent(nullptr);
 	SourceCraft->RootPart->SetParent(AttachToPart);
 
 	if (SourceCraft->Parts.IsEmpty()) {
@@ -154,9 +128,7 @@ void ACraft::AttachPart(ACraft* SourceCraft, UPart* AttachToPart) {
 }
 
 void ACraft::Throttle(float throttle) {
-	/*
 	if (Engine) {
-		Engine->AddForce(FVector(0, 0, throttle));
+		Engine->AddForce(FVector(0, 0, 100));
 	}
-	*/
 }

@@ -18,7 +18,6 @@ class MYPROJECT_API ACraft : public AActor
 public:
 	TSharedPtr<FJsonObject> Json;
 	TMap<FString, UPart*> Parts;
-	USceneComponent* Root;
 	UPart* RootPart;
 	UPart* Engine;
 

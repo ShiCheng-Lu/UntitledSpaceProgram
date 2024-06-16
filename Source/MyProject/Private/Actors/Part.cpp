@@ -3,17 +3,30 @@
 
 #include "Actors/Part.h"
 #include "Engine/StreamableManager.h"
+#include "ConstructionMode.h"
 #include "AssetLibrary.h"
 #include "Engine/StaticMesh.h"
 #include "Actors/AttachmentNode.h"
 
-UPart::UPart() {
-	SetSimulatePhysics(true);
+UPart::UPart(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+	SetCollisionEnabled(ECollisionEnabled::QueryAndProbe); // QueryAndProbe for constructor, QueryAndPhysics for simulation
+	Parent = nullptr;
+	Children = TArray<UPart*>();
+
+	// SetSimulatePhysics(true);
+
+	Physics = CreateDefaultSubobject<UPhysicsConstraintComponent>("Link");
+	// Physics->SetupAttachment(this);
+	Physics->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Locked, 0);
+	Physics->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Locked, 0);
+	Physics->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Locked, 0);
 }
 
 // Sets default values
-void UPart::Initialize(USceneComponent* InParent, TSharedPtr<FJsonObject> InJson)
+void UPart::Initialize(FString InId, TSharedPtr<FJsonObject> InStructure, TSharedPtr<FJsonObject> InJson)
 {
+	Id = InId;
+	Structure = InStructure;
 	Json = InJson;
 	
 	// Load mesh
@@ -42,10 +55,7 @@ void UPart::Initialize(USceneComponent* InParent, TSharedPtr<FJsonObject> InJson
 
 		AttachmentNodes.Add(attachment_node);
 	}
-
 	RegisterComponent();
-
-	AttachToComponent(InParent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
 }
 
 void UPart::SetAttachmentNodeVisibility(bool visibility) {
@@ -55,13 +65,21 @@ void UPart::SetAttachmentNodeVisibility(bool visibility) {
 }
 
 void UPart::SetParent(UPart* NewParent) {
-	if (Parent) {
+	if (Parent != nullptr) {
 		Parent->Children.Remove(this);
 		Parent->Structure->RemoveField(Id);
 	}
-	if (NewParent) {
-		Parent = NewParent;
+	Parent = NewParent;
+	if (Parent != nullptr) {
 		Parent->Children.Add(this);
-		Parent->Structure->SetObjectField(Id, Structure);
+		if (!Parent->Structure->HasField(Id)) {
+			Parent->Structure->SetObjectField(Id, Structure);
+		}
+		AttachToComponent(Parent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		// Physics->SetConstrainedComponents(this, "", Parent, "");
+	}
+	else {
+		DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		// Physics->BreakConstraint();
 	}
 }

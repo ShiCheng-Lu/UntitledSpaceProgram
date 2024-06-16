@@ -9,6 +9,7 @@
 #include "JsonUtil.h"
 #include "Actors/AttachmentNode.h"
 #include "Components/StaticMeshComponent.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "UI/SConstructionUI.h"
 
 #include "Part.generated.h"
@@ -30,9 +31,11 @@ public:
 
 	TArray<UAttachmentNode*> AttachmentNodes;
 
-	UPart();
+	UPhysicsConstraintComponent* Physics;
 
-	void Initialize(USceneComponent* InParent, TSharedPtr<FJsonObject> Json);
+	UPart(const FObjectInitializer &ObjectInitializer);
+
+	void Initialize(FString Id, TSharedPtr<FJsonObject> Structure, TSharedPtr<FJsonObject> Json);
 	
 	void SetAttachmentNodeVisibility(bool visibility);
 

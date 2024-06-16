@@ -81,7 +81,10 @@ UPart* AMyPlayerController::PlaceHeldPart() {
 			// Actor filter don't work for some reason, maybe to do with changing component ownership with .Rename()
 			if (AttachTo && component->GetOwner() != Selected) {
 				part_location = AttachTo->GetComponentLocation() + component->GetRelativeLocation() - node->GetRelativeLocation();
-				break;
+				// Selected->SetActorLocationAndRotation(part_location, FQuat(), false, nullptr, ETeleportType::ResetPhysics);
+
+				Selected->SetActorLocationAndRotation(part_location, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
+				return AttachTo;
 			}
 			else {
 				AttachTo = nullptr;
@@ -89,7 +92,12 @@ UPart* AMyPlayerController::PlaceHeldPart() {
 		}
 	}
 
-	Selected->SetActorLocation(part_location);
+	//Cast<UPart>(Selected->GetRootComponent())->SetSimulatePhysics(false);
+	Selected->SetActorLocationAndRotation(part_location, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
+	//Cast<UPart>(Selected->GetRootComponent())->SetSimulatePhysics(true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Orientation1 %s"), *Selected->GetActorRotation().ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Orientation2 %s"), *Selected->GetRootComponent()->GetComponentRotation().ToString());
 
 	return AttachTo;
 }
@@ -100,7 +108,6 @@ void AMyPlayerController::HandleClick(FKey Key) {
 			if (Selected != nullptr) {
 				UPart* AttachToPart = PlaceHeldPart();
 				if (AttachToPart != nullptr) {
-					UE_LOG(LogTemp, Warning, TEXT("Attach"));
 					Cast<ACraft>(AttachToPart->GetOwner())->AttachPart(Selected, AttachToPart);
 				}
 				
