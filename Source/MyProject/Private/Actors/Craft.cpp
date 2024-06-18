@@ -32,8 +32,33 @@ void ACraft::Initialize(TSharedPtr<FJsonObject> InJson)
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootPart = CreatePartStructure(Json->GetObjectField(L"structure"), nullptr)[0];
-	SetRootComponent(RootPart);
+	TArray<TPair<UPart*, TSharedPtr<FJsonObject>>> PartStructures = { { nullptr, Json->GetObjectField(TEXT("structure")) } };
+	for (int i = 0; i < PartStructures.Num(); ++i) {
+		for (auto& PartKVP : PartStructures[i].Value->Values) {
+			auto Part = NewObject<UPart>(this);
+
+			auto& PartListJson = Json->GetObjectField(L"parts");
+			auto& PartJson = PartListJson->GetObjectField(PartKVP.Key);
+			Part->Initialize(PartKVP.Key, PartKVP.Value->AsObject(), PartJson);
+			Part->SetParent(PartStructures[i].Key);
+
+			Parts.Add(PartKVP.Key, Part);
+
+			PartStructures.Add({ Part, PartKVP.Value->AsObject() });
+			UE_LOG(LogTemp, Warning, TEXT("created: %s"), *PartKVP.Key);
+		}
+	}
+
+	RootPart = *Parts.Find(PartStructures[0].Value->Values.begin().Key());
+	
+	if (true) { // building
+		SetRootComponent(RootPart);
+		for (auto& P : Parts) {
+			P.Value->AttachToComponent(P.Value == RootPart ? nullptr : RootPart, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		}
+	}
+
+	Engine = *Parts.Find("engine-1");
 }
 
 // Called when the game starts or when spawned
@@ -87,7 +112,11 @@ ACraft* ACraft::DetachPart(UPart* Part) {
 	NewCraft->RootPart = Part;
 	NewCraft->Json = MakeShareable(new FJsonObject());
 	NewCraft->Json->SetStringField(L"name", "sub craft");
+	TSharedPtr<FJsonObject> structure = MakeShareable(new FJsonObject());
+	structure->SetObjectField(Part->Id, Part->Structure);
+	NewCraft->Json->SetObjectField(L"structure", structure);
 	NewCraft->Json->SetObjectField(L"parts", MakeShareable(new FJsonObject()));
+
 	NewCraft->SetActorLocation(Part->GetComponentLocation());
 
 	TransferPart(Part, this, NewCraft);
@@ -95,40 +124,46 @@ ACraft* ACraft::DetachPart(UPart* Part) {
 	Part->SetParent(nullptr);
 	NewCraft->SetRootComponent(Part);
 
-	for (auto& P : NewCraft->Parts) {
-		UE_LOG(LogTemp, Warning, TEXT("New Craft Part: %s @ %s - %s"), *P.Value->Id, *P.Value->GetRelativeLocation().ToString(), *P.Value->GetOwner()->GetActorGuid().ToString());
+
+	if (true) { // building
+		for (auto& PartKVP : NewCraft->Parts) {
+			auto& Part = PartKVP.Value;
+			if (Part == NewCraft->RootPart) {
+				Part->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+			}
+			else {
+				Part->AttachToComponent(NewCraft->RootPart, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+			}
+		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Old Craft Component Count: %d - %s"), GetComponents().Num(), *GetActorGuid().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("New Craft Component Count: %d - %s"), NewCraft->GetComponents().Num(), *NewCraft->GetActorGuid().ToString());
 
 	return NewCraft;
 }
 
-void ACraft::UpdateJsonPartsArray() {
-	TArray<TSharedPtr<FJsonValue>> parts;
-	for (auto& part : Parts) {
-		parts.Add(MakeShareable(new FJsonValueObject(part.Value->Json)));
-	}
-	Json->SetArrayField(L"parts", parts);
-}
-
 void ACraft::AttachPart(ACraft* SourceCraft, UPart* AttachToPart) {
+	TArray<UPart*> SourceParts;
+	for (auto& PartKVP : SourceCraft->Parts) {
+		SourceParts.Add(PartKVP.Value);
+	}
+
 	TransferPart(SourceCraft->RootPart, SourceCraft, this);
 
-	SourceCraft->SetRootComponent(nullptr);
 	SourceCraft->RootPart->SetParent(AttachToPart);
 
 	if (SourceCraft->Parts.IsEmpty()) {
 		SourceCraft->Destroy();
 	}
 	else {
-
-		UE_LOG(LogTemp, Warning, TEXT("Source craft shouldn't be empty!"));
+		UE_LOG(LogTemp, Warning, TEXT("Source craft should be empty but is not!"));
+	}
+	
+	for (auto& Part : SourceParts) {
+		Part->AttachToComponent(RootPart, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	}
 }
 
 void ACraft::Throttle(float throttle) {
 	if (Engine) {
-		Engine->AddForce(FVector(0, 0, 100));
+		Engine->AddForce(FVector(0, 0, 10000));
 	}
 }

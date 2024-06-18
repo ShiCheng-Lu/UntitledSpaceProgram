@@ -7,7 +7,7 @@
       "cylinder-2": {
         "cone-1": {}
       },
-      "cylinder-3": {}
+      "engine-1": {}
     }
   },
   "parts": {
@@ -26,7 +26,7 @@
       "scale": [ 1, 1, 1 ],
       "attached_at": 1
     },
-    "cylinder-3": {
+    "engine-1": {
       "type": "engine",
       "location": [ 0, -150, -50 ],
       "rotation": [ 0, 0, 0, 1 ],

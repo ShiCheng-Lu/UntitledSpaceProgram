@@ -10,16 +10,13 @@
 
 UPart::UPart(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	SetCollisionEnabled(ECollisionEnabled::QueryAndProbe); // QueryAndProbe for constructor, QueryAndPhysics for simulation
+
 	Parent = nullptr;
 	Children = TArray<UPart*>();
 
-	// SetSimulatePhysics(true);
+	SetSimulatePhysics(true);
 
 	Physics = CreateDefaultSubobject<UPhysicsConstraintComponent>("Link");
-	// Physics->SetupAttachment(this);
-	Physics->SetAngularTwistLimit(EAngularConstraintMotion::ACM_Locked, 0);
-	Physics->SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Locked, 0);
-	Physics->SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Locked, 0);
 }
 
 // Sets default values
@@ -51,7 +48,7 @@ void UPart::Initialize(FString InId, TSharedPtr<FJsonObject> InStructure, TShare
 		auto location = JsonUtil::Vector(node->AsObject()->GetArrayField(L"location"));
 
 		auto attachment_node = NewObject<UAttachmentNode>(this);
-		attachment_node->Initialize(this, location);
+		attachment_node->Initialize(location);
 
 		AttachmentNodes.Add(attachment_node);
 	}
@@ -75,11 +72,11 @@ void UPart::SetParent(UPart* NewParent) {
 		if (!Parent->Structure->HasField(Id)) {
 			Parent->Structure->SetObjectField(Id, Structure);
 		}
-		AttachToComponent(Parent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		// AttachToComponent(Parent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 		// Physics->SetConstrainedComponents(this, "", Parent, "");
 	}
 	else {
-		DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
-		// Physics->BreakConstraint();
+		// DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		Physics->BreakConstraint();
 	}
 }

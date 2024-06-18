@@ -16,7 +16,5 @@ public:
 	// Sets default values for this component's properties
 	UAttachmentNode(const FObjectInitializer& ObjectInitializer);
 
-	void Initialize(USceneComponent *InParent, FVector& InRelativeLocation);
-
-	FVector RelativeLocation;
+	void Initialize(FVector& RelativeLocation);
 };

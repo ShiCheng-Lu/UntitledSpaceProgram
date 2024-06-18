@@ -67,7 +67,7 @@ UPart* AMyPlayerController::PlaceHeldPart() {
 	for (auto& node : SelectedPart->AttachmentNodes) {
 		TArray<FHitResult> hit_results;
 		FVector start = location;
-		FVector end = (part_location + node->RelativeLocation - location) * 2 + location;
+		FVector end = (part_location + node->GetRelativeLocation() - location) * 2 + location;
 
 		GetWorld()->LineTraceMultiByObjectType(hit_results, start, end, FCollisionObjectQueryParams::AllObjects);
 
@@ -76,14 +76,15 @@ UPart* AMyPlayerController::PlaceHeldPart() {
 			if (component == nullptr) {
 				continue;
 			}
+
 			// don't check for the closer attachment node for now
 			AttachTo = Cast<UPart>(component->GetOuter());
 			// Actor filter don't work for some reason, maybe to do with changing component ownership with .Rename()
 			if (AttachTo && component->GetOwner() != Selected) {
 				part_location = AttachTo->GetComponentLocation() + component->GetRelativeLocation() - node->GetRelativeLocation();
-				// Selected->SetActorLocationAndRotation(part_location, FQuat(), false, nullptr, ETeleportType::ResetPhysics);
 
-				Selected->SetActorLocationAndRotation(part_location, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
+				Selected->SetActorLocationAndRotation(part_location, FQuat::Identity);
+
 				return AttachTo;
 			}
 			else {
@@ -92,12 +93,7 @@ UPart* AMyPlayerController::PlaceHeldPart() {
 		}
 	}
 
-	//Cast<UPart>(Selected->GetRootComponent())->SetSimulatePhysics(false);
-	Selected->SetActorLocationAndRotation(part_location, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
-	//Cast<UPart>(Selected->GetRootComponent())->SetSimulatePhysics(true);
-
-	UE_LOG(LogTemp, Warning, TEXT("Orientation1 %s"), *Selected->GetActorRotation().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Orientation2 %s"), *Selected->GetRootComponent()->GetComponentRotation().ToString());
+	Selected->SetActorLocationAndRotation(part_location, FQuat::Identity);
 
 	return AttachTo;
 }
@@ -108,15 +104,17 @@ void AMyPlayerController::HandleClick(FKey Key) {
 			if (Selected != nullptr) {
 				UPart* AttachToPart = PlaceHeldPart();
 				if (AttachToPart != nullptr) {
-					Cast<ACraft>(AttachToPart->GetOwner())->AttachPart(Selected, AttachToPart);
+					Craft = Cast<ACraft>(AttachToPart->GetOwner());
+					Craft->AttachPart(Selected, AttachToPart);
 				}
-				
 				Selected = nullptr;
 				// Craft->SetAttachmentNodeVisibility(true);
+				UE_LOG(LogTemp, Warning, TEXT("Something Sleeced"));
+
 			}
 			else {
 				FHitResult result;
-				if (GetHitResultUnderCursor(ECC_Visibility, true, result)) {
+				if (GetHitResultUnderCursor(ECC_WorldStatic, true, result)) {
 					SelectedPart = Cast<UPart>(result.GetComponent());
 
 					FVector ActorLocation = SelectedPart->GetRelativeLocation();
@@ -133,6 +131,7 @@ void AMyPlayerController::HandleClick(FKey Key) {
 
 					// Craft->SetAttachmentNodeVisibility(false);
 				}
+				UE_LOG(LogTemp, Warning, TEXT("Nothing Selected"));
 			}
 		}
 		else if (Key == EKeys::RightMouseButton) {
@@ -143,6 +142,15 @@ void AMyPlayerController::HandleClick(FKey Key) {
 				if (GetHitResultUnderCursor(ECC_Visibility, true, result)) {
 					// TSharedPtr<FJsonObject> Part = ((APart*)result.GetActor())->Json;
 					// ((AConstructionHUD*)MyHUD)->MyWidget->ShowPart(Part);
+				}
+			}
+
+			// DEBUG:
+			if (GEngine) {
+				FHitResult result;
+				if (GetHitResultUnderCursor(ECC_WorldStatic, true, result)) {
+					FGuid actorGuid = result.GetComponent()->GetOwner()->GetActorGuid();
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::FromInt(result.GetComponent()->GetOwner()->GetUniqueID()));
 				}
 			}
 		}

@@ -21,6 +21,8 @@ public:
 	UPart* RootPart;
 	UPart* Engine;
 
+	USphereComponent* BaseSphere;
+
 public:
 	ACraft();
 
@@ -52,8 +54,6 @@ public:
 	ACraft* DetachPart(UPart* Part);
 
 	void AttachPart(ACraft* OtherCraft, UPart* AttachToPart);
-
-	void UpdateJsonPartsArray();
 
 	void Throttle(float throttle);
 };
