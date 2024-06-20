@@ -22,7 +22,10 @@ public:
 	void ShowPart(TSharedPtr<FJsonObject> Part);
 
 	void SelectPartToPlace(TSharedPtr<FJsonObject> Part);
+
+	FReply LaunchButtonClicked();
 private:
 	TSharedPtr<SHorizontalBox> ListBox;
 	TSharedPtr<SPartDetails> PartDetails;
+	TSharedPtr<SButton> LaunchButton;
 };

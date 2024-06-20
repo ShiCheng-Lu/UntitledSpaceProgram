@@ -22,6 +22,14 @@ void SConstructionUI::Construct(const FArguments& InArgs)
 		[
 			SAssignNew(PartDetails, SPartDetails)
 		];
+	ListBox->AddSlot().MaxWidth(100)
+		[
+			SAssignNew(LaunchButton, SButton)
+		];
+
+	FOnClicked LaunchButtonDelegate;
+	LaunchButtonDelegate.BindRaw(this, &SConstructionUI::LaunchButtonClicked);
+	LaunchButton->SetOnClicked(LaunchButtonDelegate);
 }
 
 void SConstructionUI::ShowPart(TSharedPtr<FJsonObject> Part) {
@@ -34,6 +42,14 @@ void SConstructionUI::ShowPart(TSharedPtr<FJsonObject> Part) {
 
 void SConstructionUI::SelectPartToPlace(TSharedPtr<FJsonObject> Part) {
 	
+}
+
+FReply SConstructionUI::LaunchButtonClicked() {
+	UE_LOG(LogTemp, Warning, TEXT("Launch Button Clicked"));
+
+	
+
+	return FReply::Handled();
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

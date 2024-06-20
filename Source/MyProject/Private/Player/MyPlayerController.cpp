@@ -109,8 +109,6 @@ void AMyPlayerController::HandleClick(FKey Key) {
 				}
 				Selected = nullptr;
 				// Craft->SetAttachmentNodeVisibility(true);
-				UE_LOG(LogTemp, Warning, TEXT("Something Sleeced"));
-
 			}
 			else {
 				FHitResult result;
@@ -191,7 +189,6 @@ void AMyPlayerController::PlayerTick(float DeltaTime) {
 		break;
 	}
 }
-
 
 void AMyPlayerController::Throttle(float Val) {
 	if (Val != 0 && Craft != nullptr) {

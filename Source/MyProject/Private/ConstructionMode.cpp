@@ -10,7 +10,6 @@
 AConstructionMode::AConstructionMode(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	HUDClass = AConstructionHUD::StaticClass();
 	PlayerControllerClass = AMyPlayerController::StaticClass();
 	DefaultPawnClass = AConstructionPawn::StaticClass();
 }

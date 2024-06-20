@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Containers/Queue.h"
 #include "Actors/Craft.h"
+#include "Containers/Queue.h"
 
 ACraft::ACraft() {
 }
@@ -123,7 +123,6 @@ ACraft* ACraft::DetachPart(UPart* Part) {
 	
 	Part->SetParent(nullptr);
 	NewCraft->SetRootComponent(Part);
-
 
 	if (true) { // building
 		for (auto& PartKVP : NewCraft->Parts) {
